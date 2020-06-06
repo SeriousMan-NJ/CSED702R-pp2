@@ -1,6 +1,8 @@
+#!/bin/bash
+
 for file in *.c
 do
-  echo "[COMPILE] $flie"
+  echo "[COMPILE] $file"
   clang -S -emit-llvm -O0 -Xclang -disable-O0-optnone $file
 done
 
