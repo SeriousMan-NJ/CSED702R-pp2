@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/CodeGen/PP2/Graph.h"
+#include "Graph.h"
 #include "../Spiller.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/Passes.h"
