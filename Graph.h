@@ -66,6 +66,7 @@ namespace PP2 {
     }
 
     void dump(raw_ostream &OS) const;
+    void exportToNetworkx(raw_ostream &OS) const;
 
     MachineFunction &MF;
     LiveIntervals &LIS;

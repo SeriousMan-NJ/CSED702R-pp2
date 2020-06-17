@@ -83,6 +83,20 @@ PP2DumpGraphs("pp2-dump-graph",
                cl::init(false), cl::Hidden);
 #endif
 
+#ifndef NDEBUG
+static cl::opt<bool>
+PP2ExportGraphs("pp2-export-graph",
+               cl::desc("Export interference graph"),
+               cl::init(false), cl::Hidden);
+#endif
+
+#ifndef NDEBUG
+static cl::opt<bool>
+PP2ViewCFG("pp2-view-cfg",
+               cl::desc("View CFG"),
+               cl::init(false), cl::Hidden);
+#endif
+
 namespace {
   class InterferenceGraph : public MachineFunctionPass {
   public:
@@ -190,7 +204,22 @@ void PP2::Graph::dump(raw_ostream &OS) const {
   }
 }
 
+void PP2::Graph::exportToNetworkx(raw_ostream &OS) const {
+  for (auto N : Nodes) {
+    OS << N.NId << " ";
+    for (auto AdjN : N.adjNodes) {
+      OS << AdjN << " ";
+    }
+    OS << "\n";
+  }
+}
+
 bool InterferenceGraph::runOnMachineFunction(MachineFunction &MF) {
+#ifndef NDEBUG
+  if (PP2ViewCFG)
+    MF.viewCFG();
+#endif
+
   LiveIntervals &LIS = getAnalysis<LiveIntervals>();
   VirtRegMap &VRM = getAnalysis<VirtRegMap>();
 
@@ -214,17 +243,26 @@ bool InterferenceGraph::runOnMachineFunction(MachineFunction &MF) {
 
 #ifndef NDEBUG
   if (PP2DumpGraphs) {
-    std::ostringstream RS;
-    std::string GraphFileName = FullyQualifiedName + "." + RS.str() +
-                                ".pp2graph";
+    std::string GraphFileName = FullyQualifiedName + ".dump.pp2graph";
     std::error_code EC;
     raw_fd_ostream OS(GraphFileName, EC, sys::fs::OF_Text);
     LLVM_DEBUG(dbgs() << "Dumping graph to \""
                       << GraphFileName << "\"\n");
     G.dump(OS);
   }
+  if (PP2ExportGraphs) {
+    std::string GraphFileName = FullyQualifiedName + ".export.pp2graph";
+    std::error_code EC;
+    raw_fd_ostream OS(GraphFileName, EC, sys::fs::OF_Text);
+    LLVM_DEBUG(dbgs() << "Exporting graph to \""
+                      << GraphFileName << "\"\n");
+    G.exportToNetworkx(OS);
+  }
 #endif
   }
+
+  VRegsToAlloc.clear();
+  EmptyIntervalVRegs.clear();
 
   LLVM_DEBUG(dbgs() << "[PP2] end!\n");
 
